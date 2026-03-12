@@ -9,6 +9,9 @@ venv/
 models/
 data/raw/
 data/processed/
+data/corrected/audio/
+data/output/
+data/correction_state.json
 *.pkl
 *.pth
 .idea/

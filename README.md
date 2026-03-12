@@ -89,7 +89,8 @@ Additional influences: **Arabic** (religious vocabulary), **French** (modern loa
 comorian-mbert-finetuning/
 │
 ├── 📓 01_transcribe.ipynb        # Record/upload → transcribe with Whisper
-├── 📓 02_finetune_whisper.ipynb   # Fine-tune Whisper on corrected Comorian data
+├── 📓 02_finetune_whisper.ipynb   # Fine-tune Whisper on corrected Comorian data (Kaggle)
+├── 📓 02_finetune_whisper_colab.ipynb  # Colab backup fine-tuning workflow
 ├── 📓 03_translate.ipynb          # Build Comorian ↔ French ↔ English translation
 │
 ├── 📚 data/
@@ -105,13 +106,29 @@ comorian-mbert-finetuning/
 ### Transcribe (Google Colab)
 1. Open `01_transcribe.ipynb` in [Google Colab](https://colab.research.google.com)
 2. Go to `Runtime` → `Change runtime type` → Select **T4 GPU**
-3. Run all cells — record your voice or load audio from Drive
+3. Run all cells after uploading audio files to Drive `raw/`
 4. Review and correct transcriptions
 
 ### Fine-tune Whisper (Kaggle recommended)
 1. Collect 10-50 hours of corrected audio+text pairs
-2. Open `02_finetune_whisper.ipynb` on [Kaggle](https://kaggle.com) (30h/week free GPU)
-3. Train and export your Comorian Whisper model
+2. Publish or attach your corrected dataset to Kaggle with `corrected/audio/` and `corrected/metadata.csv`
+3. Open `02_finetune_whisper.ipynb` on [Kaggle](https://kaggle.com) (30h/week free GPU)
+4. Train and export your Comorian Whisper model
+
+### Fine-tune Whisper (Google Colab backup)
+1. Keep your corrected dataset in Drive at `MyDrive/SHIKOMORI_dataset/corrected/`
+2. Open `02_finetune_whisper_colab.ipynb` in [Google Colab](https://colab.research.google.com)
+3. Train from the Drive-backed dataset if you need the fallback workflow
+
+### Review and Build Corrected Data
+1. Record WAV files into `data/raw/`
+2. Optional: generate machine transcripts in `data/output/` with `01_transcribe.ipynb`
+3. Run `python3 scripts/manage_corrections.py`
+4. The CLI will autoplay each WAV and open a terminal editor with the transcript already visible; if a Whisper transcript exists, it is prefilled so you can make small fixes quickly
+5. The tool resumes progress automatically from `data/correction_state.json`
+6. Use `Enter` to accept, or `Ctrl-R` replay, `Ctrl-K` skip, `Ctrl-P` go back, `Ctrl-T` view the full machine transcript, and `Ctrl-Q` quit safely
+7. When you accept a correction, the tool moves the WAV into `data/corrected/audio/` and updates `data/corrected/metadata.csv`
+8. By default, matching `*_transcript.txt` and `*_timestamps.txt` files are deleted after approval; use `--keep-output-files` if you want to retain them
 
 ### Translation (Kaggle recommended)
 1. Build a parallel corpus (Comorian + French + English)
@@ -193,7 +210,6 @@ Tested on a ~90 second Comorian audio sample:
 
 ### Phase 1 — Record & Transcribe *(Now)*
 - [x] Pipeline with faster-whisper large-v3
-- [x] Voice recording in browser
 - [x] Google Drive integration
 - [ ] Record 10-50 hours of Comorian speech
 - [ ] Correct transcriptions with native speakers
