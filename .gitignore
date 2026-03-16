@@ -9,9 +9,16 @@ venv/
 models/
 data/raw/
 data/processed/
-data/corrected/audio/
+data/corrected/
 data/output/
 data/correction_state.json
 *.pkl
 *.pth
 .idea/
+
+# Notebooks - kept private for now
+*.ipynb
+!notebooks/README.md  # Keep placeholder docs if created later
+
+# Scripts - internal tools kept private
+scripts/

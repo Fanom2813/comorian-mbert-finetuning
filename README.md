@@ -1,4 +1,6 @@
-# 🇰🇲 Shikomori AI — Comorian Language Speech & NLP Project
+# 🇰🇲 OpenShikomori — Open-source Comorian AI
+
+[English](README.md) | [Français](README.fr.md) | [العربية](README.ar.md)
 
 > **The first open-source effort to build a Speech-to-Text and Language Model for Comorian (Shikomori)** — a low-resource language spoken by ~800,000 people across the Comoros Islands.
 
@@ -6,7 +8,7 @@
 
 ## 🌍 Why This Project Exists
 
-Comorian (Shikomori) has **no existing AI language model**, no public speech dataset, and no automatic transcription tool. This project aims to change that — starting from raw audio collected from the web, building toward a full ASR + LLM pipeline optimized for African languages.
+Comorian (Shikomori) has **no existing AI language model**, no public speech dataset, and no automatic transcription tool. **OpenShikomori** aims to change that — starting with a trustworthy public shell for voice collection and building toward a full ASR + LLM pipeline optimized for African languages.
 
 This is not just a research project. It is an act of **language preservation**.
 
@@ -74,162 +76,30 @@ Additional influences: **Arabic** (religious vocabulary), **French** (modern loa
     └─────────────────────────────────────────────────────┘
 ```
 
-### 💻 Compute Strategy (All Free)
-| Platform | GPU | Hours/Week | Best For |
-|----------|-----|------------|----------|
-| Google Colab | T4 (16 GB) | ~15-30h | Recording, transcription, experiments |
-| Kaggle | P100 or 2×T4 | **30h** | Fine-tuning (heavy lifting) |
-| **Combined** | — | **~50-60h** | Everything needed for Phase 1-3 |
-
----
-
-## 📁 Repository Structure
-
-```
-comorian-mbert-finetuning/
-│
-├── 📓 01_transcribe.ipynb        # Record/upload → transcribe with Whisper
-├── 📓 02_finetune_whisper.ipynb   # Fine-tune Whisper on corrected Comorian data (Kaggle)
-├── 📓 02_finetune_whisper_colab.ipynb  # Colab backup fine-tuning workflow
-├── 📓 03_translate.ipynb          # Build Comorian ↔ French ↔ English translation
-│
-├── 📚 data/
-│   └── raw/                       # Raw audio (not committed — too large)
-│
-└── README.md
-```
-
----
-
-## 🚀 Quick Start
-
-### Transcribe (Google Colab)
-1. Open `01_transcribe.ipynb` in [Google Colab](https://colab.research.google.com)
-2. Go to `Runtime` → `Change runtime type` → Select **T4 GPU**
-3. Run all cells after uploading audio files to Drive `raw/`
-4. Review and correct transcriptions
-
-### Fine-tune Whisper (Kaggle recommended)
-1. Collect 10-50 hours of corrected audio+text pairs
-2. Publish or attach your corrected dataset to Kaggle with `corrected/audio/` and `corrected/metadata.csv`
-3. Open `02_finetune_whisper.ipynb` on [Kaggle](https://kaggle.com) (30h/week free GPU)
-4. Train and export your Comorian Whisper model
-
-### Fine-tune Whisper (Google Colab backup)
-1. Keep your corrected dataset in Drive at `MyDrive/SHIKOMORI_dataset/corrected/`
-2. Open `02_finetune_whisper_colab.ipynb` in [Google Colab](https://colab.research.google.com)
-3. Train from the Drive-backed dataset if you need the fallback workflow
-
-### Review and Build Corrected Data
-1. Record WAV files into `data/raw/`
-2. Optional: generate machine transcripts in `data/output/` with `01_transcribe.ipynb`
-3. Run `python3 scripts/manage_corrections.py`
-4. The CLI will autoplay each WAV and open a terminal editor with the transcript already visible; if a Whisper transcript exists, it is prefilled so you can make small fixes quickly
-5. The tool resumes progress automatically from `data/correction_state.json`
-6. Use `Enter` to accept, or `Ctrl-R` replay, `Ctrl-K` skip, `Ctrl-P` go back, `Ctrl-T` view the full machine transcript, and `Ctrl-Q` quit safely
-7. When you accept a correction, the tool moves the WAV into `data/corrected/audio/` and updates `data/corrected/metadata.csv`
-8. By default, matching `*_transcript.txt` and `*_timestamps.txt` files are deleted after approval; use `--keep-output-files` if you want to retain them
-
-### Translation (Kaggle recommended)
-1. Build a parallel corpus (Comorian + French + English)
-2. Open `03_translate.ipynb` on Kaggle
-3. Fine-tune NLLB-200 for Comorian translation
-
----
-
-## ⚙️ Pipeline Settings
-
-### Transcription (faster-whisper)
-| Setting | Value | Why |
-|---------|-------|-----|
-| `no_speech_threshold` | `0.3` | Helps skip non-speech while still catching quiet speech |
-| `log_prob_threshold` | `-1.5` | Flags low-confidence decoding more aggressively |
-| `compression_ratio_threshold` | `3.0` | Rejects pathological decoding loops |
-| `condition_on_previous_text` | `True` | Uses context for better guessing |
-| `word_timestamps` | `True` | Enables timestamp-aware decoding; notebook saves segment timestamps |
-| `language` | `auto → sw fallback` | Auto-detect first, then retry with Swahili for mixed Comorian clips |
-
----
-
-## 📄 Output Format
-
-For each audio file, the pipeline produces:
-
-**`filename_transcript.txt`** — Clean full text:
-```
-Source File  : story_01.mp3
-Model        : faster-whisper large-v3
-Selected Pass : auto-detect
-Requested Lang: auto
-Detected Lang : sw
-Lang Prob     : 0.62
-Avg Logprob   : -0.24
-Transcribed  : 2025-03-10 14:32
-=======================================================
-
-Salamualaikum warahmatullahi wabarakatuh
-Habar Zaho, wa jeje, wa mirongolo omar...
-```
-
-**`filename_timestamps.txt`** — Timestamped with confidence:
-```
-Source        : story_01.mp3
-Selected Pass : auto-detect
-Detected Lang : sw
-Avg Logprob   : -0.24
-🟢 > -0.3 confident | 🟡 uncertain | 🔴 needs correction
-=======================================================
-
-[1.7s → 5.7s]  🟢 (-0.12)  Salamualaikum warahmatullahi wabarakatuh
-[5.7s → 16.2s] 🟢 (-0.24)  Habar Zaho, wa jeje, wa mirongolo omar
-[19.0s → 30.9s] 🟡 (-0.55)  silawa, harma, ikartie...
-```
-
-### Confidence Indicators
-| Icon | Score | Meaning |
-|------|-------|---------|
-| 🟢 | `avg_logprob > -0.3` | Whisper is confident — likely correct |
-| 🟡 | `-0.7 < avg_logprob <= -0.3` | Uncertain — worth reviewing |
-| 🔴 | `avg_logprob <= -0.7` | Guessing — needs human correction |
-
----
-
-## 📊 Current Accuracy Results
-
-Tested on a ~90 second Comorian audio sample:
-
-| Model | Accuracy | Confidence | Notes |
-|-------|----------|------------|-------|
-| openai-whisper large | ~71% | 0.67–0.97 | Baseline |
-| faster-whisper large-v3 | **~92%** | **0.91–0.98** | Current |
-| Fine-tuned on Comorian | ~97%+ | TBD | Future goal |
-
 ---
 
 ## 🗺️ Roadmap
 
-### Phase 1 — Record & Transcribe *(Now)*
-- [x] Pipeline with faster-whisper large-v3
-- [x] Google Drive integration
-- [ ] Record 10-50 hours of Comorian speech
-- [ ] Correct transcriptions with native speakers
+### Phase 1 — Public Foundation & Trust *(Now)*
+- [x] Open-source web shell for mission framing
+- [x] Privacy-first contribution model
+- [ ] Multilingual support (Comorian, French, English, Arabic)
+- [ ] First 10-hour reviewed speech target
 
-### Phase 2 — Fine-tune Whisper on Comorian *(2-4 months)*
-- [ ] Format corrected audio+text as HuggingFace dataset
-- [ ] Fine-tune `openai/whisper-small` on Comorian (Kaggle — 30h/week free GPU)
-- [ ] Evaluate WER improvement
-- [ ] Use fine-tuned model to transcribe MORE audio faster (snowball)
+### Phase 2 — Recording & Contributor Entry
+- [ ] Contributor profiles and dialect selection
+- [ ] Managed recording prompts (Web & Mobile)
+- [ ] Private audio submission pipeline
 
-### Phase 3 — Scale Dataset *(4-8 months)*
-- [ ] Snowball: fine-tuned Whisper → auto-transcribe → correct → retrain
+### Phase 3 — Scale & Dataset Release
 - [ ] Target: 100+ hours of corrected Comorian audio+text
-- [ ] Publish dataset on HuggingFace 🤗
+- [ ] Public dataset release on HuggingFace 🤗
+- [ ] Fine-tuned Whisper ASR model
 
-### Phase 4 — Translation AI *(8-12 months)*
-- [ ] Build parallel corpus: Comorian ↔ French ↔ English
-- [ ] Fine-tune NLLB-200 (Meta's translation model)
-- [ ] Build translation app
-- [ ] Mobile app (Android first — most used in Comoros)
+### Phase 4 — Translation & LLM
+- [ ] Parallel corpus: Comorian ↔ French ↔ English
+- [ ] Fine-tune NLLB-200 for translation
+- [ ] Deploy accessible translation tools for the Comorian community
 
 ---
 
@@ -238,48 +108,29 @@ Tested on a ~90 second Comorian audio sample:
 ### I am a native Comorian speaker
 This is the most valuable contribution you can make:
 1. Review transcription files and correct errors
-2. Record yourself reading text passages
+2. Record yourself reading text passages via our upcoming web shell
 3. Help identify which dialect is spoken in audio files
 
 ### I am a developer / ML engineer
-1. Improve the transcription pipeline
-2. Build the fine-tuning notebook
+1. Improve the recording shell (`website/`)
+2. Build the fine-tuning notebooks
 3. Help with data formatting for HuggingFace
-4. Build the correction review tool
-
-### I have audio recordings
-1. Stories, speeches, radio, TV, podcasts in Comorian
-2. Open an issue or send a PR with the source links
 
 ---
 
-## 🌍 Related Projects & Communities
+## 💖 Sponsorship
 
-| Project | Description | Link |
-|---------|-------------|------|
-| **Masakhane** | NLP for African languages | [masakhane.io](https://masakhane.io) |
-| **AfricaNLP** | African language AI workshop | ACL/EMNLP |
-| **Mozilla Common Voice** | Crowdsourced voice dataset | [commonvoice.mozilla.org](https://commonvoice.mozilla.org) |
-| **MMS by Meta** | ASR for 1000+ languages | [HuggingFace](https://huggingface.co/facebook/mms-300m) |
-| **AfriBERTa** | BERT for African languages | [HuggingFace](https://huggingface.co/castorini/afriberta_large) |
-| **AfroXLMR** | XLM-R for African languages | [HuggingFace](https://huggingface.co/Davlan/afro-xlmr-large) |
+We are looking for partners and individual sponsors to help fund the compute costs and data collection efforts for this project.
 
----
+*Sponsors will be listed here.*
 
-## 📚 References
-
-- Whisper: [Robust Speech Recognition via Large-Scale Weak Supervision](https://arxiv.org/abs/2212.04356) — OpenAI
-- faster-whisper: [CTranslate2 implementation of Whisper](https://github.com/SYSTRAN/faster-whisper)
-- AfriBERTa: [Few-shot Learning for African Languages](https://arxiv.org/abs/2111.07978)
-- Masakhane: [Participatory Research for Low-resource Language NLP](https://arxiv.org/abs/2010.07445)
+[**Become a Sponsor**](https://github.com/sponsors/fanom2813)
 
 ---
 
 ## 📜 License
 
-This project is licensed under the **MIT License** — see [LICENSE](https://github.com/fanom2813/shikomori-ai/blob/main/LICENSE) for details.
-
-All collected audio data respects the original sources' terms of use. Transcriptions are released under **CC BY 4.0**.
+This project is licensed under the **MIT License**. Collected transcriptions and datasets are intended to be released under **CC BY 4.0**.
 
 ---
 
@@ -288,8 +139,6 @@ All collected audio data respects the original sources' terms of use. Transcript
 **[@fanom2813](https://github.com/fanom2813)**
 
 Built with ❤️ for the Comorian people and language.
-
-> *"A language is not just a way of communicating — it is a way of seeing the world."*
 
 ---
 
